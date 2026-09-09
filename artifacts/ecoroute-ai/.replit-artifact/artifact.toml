@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "EcoRoute AI"
+description = "A responsive college project website that compares multimodal routes, estimates transport emissions, and recommends options based on speed and sustainability priorities using transparent demo data."
+version = "1.0.0"
+id = "artifacts/ecoroute-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21848
+
+[services.development]
+run = "pnpm --filter @workspace/ecoroute-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ecoroute-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ecoroute-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21848"
+BASE_PATH = "/"

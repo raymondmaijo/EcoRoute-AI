@@ -1,0 +1,111 @@
+Create a responsive college project website called **EcoRoute AI**.
+
+### Concept
+
+Combine these two ideas:
+
+**1. AI Traffic Emission Estimator**
+Estimate CO₂ emissions for a route based on distance, transport mode, and traffic level.
+
+**2. Multi-Modal Route Optimizer**
+Allow users to compare:
+🚗 Car | 🚌 Bus | 🚲 Bicycle | 🚶 Walking | 🚆 Public Transport
+
+Compare:
+
+* Travel time
+* Cost
+* Distance
+* Estimated CO₂
+* Overall score
+
+The system recommends the best option based on the user's priorities.
+
+### Required Pages
+
+Create at least **5 functional pages**:
+
+1. **Home** – Explain the environmental problem, target users and EcoRoute AI solution.
+2. **Plan Route** – Enter From and To locations and calculate route options.
+3. **Compare Routes** – Compare all transport modes in cards/table.
+4. **Environmental Impact** – Show CO₂ comparison, savings and charts.
+5. **About & References** – Explain the project, limitations, future scope and external references.
+
+### Interactive Features
+
+Include at least these 3:
+
+1. **Route Calculator** – Enter locations and generate results.
+2. **Priority Slider** – Fastest ↔ Greenest; change the recommended mode dynamically.
+3. **Traffic Selector** – Low / Moderate / Heavy / Severe traffic; changing traffic should change car travel time and estimated CO₂.
+
+### Emission Logic
+
+Use simple configurable formulas:
+
+**CO₂ = Distance × Emission Factor × Traffic Factor**
+
+Use different estimated factors for car, bus, public transport, bicycle and walking.
+
+Clearly label values as **estimated/demo values**, not exact real-world measurements.
+
+### Example Demo
+
+From: **Thrissur Railway Station**
+To: **Government Engineering College Thrissur**
+
+Example results:
+
+| Mode             |   Time | Cost |    CO₂ |
+| ---------------- | -----: | ---: | -----: |
+| Car              | 25 min | ₹150 | 3.2 kg |
+| Bus              | 35 min |  ₹30 | 0.8 kg |
+| Bicycle          | 42 min |   ₹0 | 0.1 kg |
+| Walking          | 2h 25m |   ₹0 |   0 kg |
+| Public Transport | 40 min |  ₹25 | 0.5 kg |
+
+Use demo data if live APIs are unavailable. Do not claim simulated traffic is real-time.
+
+### Technical Requirements
+
+Use **HTML, CSS and JavaScript**. A framework such as React is allowed.
+
+Make the website:
+
+* Fully responsive
+* Modern and professional
+* Green/teal sustainability + technology theme
+* Easy to navigate
+* Suitable for a college Engineering/IT presentation
+
+Use JavaScript for calculations and interactions.
+
+Include:
+
+* Responsive navbar
+* Cards
+* Tables
+* Simple charts
+* Icons
+* Buttons
+* Footer
+
+### Academic Requirements
+
+Clearly present:
+
+* Environmental problem
+* Target users
+* Proposed Engineering/IT solution
+* Minimum 4 functional screens
+* At least 2 interactive features
+* Technologies used
+* References for external resources
+* Project limitations
+* Future scope
+
+Do not overcomplicate the project. Prioritize a **working, attractive and demo-ready prototype** over unnecessary features.
+
+Core flow:
+
+**Enter Route → Calculate → Compare → Recommend → Show CO₂ Impact**
