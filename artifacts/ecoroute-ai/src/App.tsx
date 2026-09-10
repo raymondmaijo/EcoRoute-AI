@@ -368,7 +368,7 @@ function HomePage() {
           <div className="eyebrow">The EcoRoute approach</div>
           <h2 className="section-heading">Make the driving tradeoff legible.</h2>
           <div className="feature-grid">
-            <div className="surface feature-card shadow-card"><div className="feature-icon"><Map size={17} /></div><h3>See three routes</h3><p>Fastest, cleanest, and average route choices on one schematic map.</p></div>
+            <div className="surface feature-card shadow-card"><div className="feature-icon"><Map size={17} /></div><h3>See three routes</h3><p>Fastest, cleanest, and average route choices on an interactive Kochi map.</p></div>
             <div className="surface feature-card shadow-card"><div className="feature-icon"><Fuel size={17} /></div><h3>Choose your vehicle</h3><p>Use a realistic Indian car or bike model to personalize the estimate.</p></div>
             <div className="surface feature-card shadow-card"><div className="feature-icon"><Cloud size={17} /></div><h3>Understand CO₂</h3><p>View estimated kilograms of CO₂ for each route and vehicle.</p></div>
             <div className="surface feature-card shadow-card"><div className="feature-icon"><Wind size={17} /></div><h3>Track NO₂ too</h3><p>See an indicative tailpipe NO₂ estimate in grams alongside CO₂.</p></div>
@@ -377,7 +377,7 @@ function HomePage() {
       </section>
 
       <section className="home-cta">
-        <div><div className="eyebrow" style={{ color: 'hsl(168 63% 55%)' }}>Start with one trip</div><h2 className="section-heading">Pick a Kochi route and see what your vehicle leaves behind.</h2><p className="section-copy">Choose your locations, traffic condition, and vehicle model to create a tailored route readout.</p></div>
+        <div><div className="eyebrow" style={{ color: 'hsl(168 63% 55%)' }}>Start with one trip</div><h2 className="section-heading">Pick a Kochi route and see what your vehicle leaves behind.</h2><p className="section-copy">Choose your locations, model year, and vehicle model to create a tailored live-map readout.</p></div>
         <Link href="/plan" className="btn btn-secondary" data-testid="link-cta-plan">Open route planner <ArrowRight size={15} /></Link>
       </section>
       <div className="footer-note"><span>EcoRoute AI · Engineering / IT project demo</span><span>Estimates are educational, not live navigation guidance.</span></div>
@@ -496,7 +496,7 @@ function PlanPage() {
           </div>
           <div className={`traffic-status-card ${trafficSnapshot.status === 'live' ? 'is-live' : ''}`} data-testid="traffic-status">
             <div className="traffic-status-top"><span><Gauge size={15} /> Current traffic</span><b>{trafficSnapshot.status === 'live' ? trafficSnapshot.label : trafficSnapshot.status === 'loading' ? 'Checking…' : 'Unavailable'}</b></div>
-            <p>{trafficSnapshot.status === 'live' ? `${trafficSnapshot.currentSpeedKph} km/h current speed · ${trafficSnapshot.freeFlowSpeedKph} km/h free-flow${trafficSnapshot.road ? ` · ${trafficSnapshot.road}` : ''}` : trafficSnapshot.status === 'loading' ? 'Reading a live traffic-flow segment for this corridor.' : trafficSnapshot.message ?? 'Connect a free traffic provider key to replace the demo selector with current conditions.'}</p>
+            <p>{trafficSnapshot.status === 'live' ? `${trafficSnapshot.currentSpeedKph} km/h current speed · ${trafficSnapshot.freeFlowSpeedKph} km/h free-flow${trafficSnapshot.road ? ` · ${trafficSnapshot.road}` : ''}` : trafficSnapshot.status === 'loading' ? 'Reading a live traffic-flow segment for this corridor.' : trafficSnapshot.message ?? 'Live traffic data is unavailable for this corridor.'}</p>
             {trafficSnapshot.updatedAt && <small>Updated {new Date(trafficSnapshot.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>}
           </div>
           <div className="priority-box">
@@ -596,14 +596,14 @@ function AboutPage() {
       <div className="about-grid">
         <div className="about-main">
           <section className="surface about-card shadow-card"><h2>What we are testing</h2><p>Can a route planner move beyond “fastest” and help people understand the cost of convenience? EcoRoute compares three schematic route choices around the Kochi corridor and adapts the emissions estimate to a selected car or bike model.</p><div className="limitation"><p><strong>Design principle:</strong> clarity before persuasion. The app should make a cleaner option understandable without pretending every decision is simple.</p></div></section>
-          <section className="surface about-card"><h2>How the demo works</h2><ul><li>Choose from Aluva Railway Station, Kalamassery, Thripunitara, Kakkanad, and Rajagiri School of Engineering.</li><li>Choose a car or bike model from the included Indian vehicle catalog.</li><li>Compare fastest, cleanest / greenest, and average route choices on the schematic map.</li><li>CO₂ follows <strong>distance × vehicle factor × traffic factor</strong>; NO₂ uses a separate indicative vehicle factor.</li><li>Traffic levels are illustrative scenarios, not real-time traffic.</li></ul></section>
-          <section className="surface about-card"><h2>Limitations & responsible use</h2><p>This prototype does not connect to a live maps provider, routing API, vehicle telemetry, pollution registry, or real-time traffic. Emission factors are illustrative averages and do not account for occupancy, vehicle age, road grade, maintenance, fuel blend, cold starts, or life-cycle emissions. Use the readouts to understand the shape of a decision, not as certified environmental data.</p></section>
+          <section className="surface about-card"><h2>How the demo works</h2><ul><li>Choose from Aluva Railway Station, Kalamassery, Thripunitara, Kakkanad, and Rajagiri School of Engineering.</li><li>Choose a car or bike model and model year from the included Indian vehicle catalog.</li><li>Compare fastest, cleanest / greenest, and average route choices on the interactive OpenStreetMap view.</li><li>CO₂ follows <strong>road distance × vehicle factor × model-year adjustment × live traffic factor</strong> when current flow data is available; NO₂ uses a separate indicative factor.</li><li>Public transport estimates show bus, metro / rail, auto-rickshaw, and walking / cycling alternatives for one passenger.</li></ul></section>
+          <section className="surface about-card"><h2>Limitations & responsible use</h2><p>Road geometry comes from public OpenStreetMap/OSRM services and current traffic comes from a TomTom flow segment when available. Emission factors remain illustrative averages and do not account for occupancy, vehicle condition, road grade, maintenance, fuel blend, cold starts, or life-cycle emissions. Use the readouts to understand the shape of a decision, not as certified environmental data or guaranteed turn-by-turn guidance.</p></section>
           <section className="surface about-card"><h2>Future scope</h2><p>Next steps could include OpenStreetMap or Google Maps route geometry, live traffic, elevation-aware fuel burn, vehicle registration lookups, route GPS traces, weather conditions, and a confidence interval around each estimate.</p></section>
         </div>
         <aside className="about-sidebar">
-          <section className="surface about-card"><h2>Built with</h2><p>A focused browser prototype with a readable calculation model and a local Kochi corridor map.</p><div className="tech-list"><span className="tech-tag">React + Vite</span><span className="tech-tag">TypeScript</span><span className="tech-tag">Wouter</span><span className="tech-tag">Lucide icons</span><span className="tech-tag">SVG map</span></div></section>
+          <section className="surface about-card"><h2>Built with</h2><p>A focused browser prototype with a readable calculation model, interactive Kochi map, and server-side traffic proxy.</p><div className="tech-list"><span className="tech-tag">React + Vite</span><span className="tech-tag">TypeScript</span><span className="tech-tag">OpenStreetMap</span><span className="tech-tag">OSRM routes</span><span className="tech-tag">TomTom flow</span></div></section>
           <section className="surface about-card"><h2>Reference shelf</h2><div className="reference-list"><div className="reference"><ExternalLink size={14} /><span>IPCC, <em>Climate Change 2022: Mitigation of Climate Change</em>.</span></div><div className="reference"><ExternalLink size={14} /><span>EPA, <em>Greenhouse Gas Emissions for Transportation</em>.</span></div><div className="reference"><ExternalLink size={14} /><span>Our World in Data, <em>CO₂ emissions from transport</em>.</span></div><div className="reference"><ExternalLink size={14} /><span>GHG Protocol, <em>Scope 3 Calculation Guidance</em>.</span></div></div></section>
-          <section className="surface about-card" style={{ background: 'hsl(var(--secondary))' }}><School size={23} style={{ marginBottom: 18 }} /><h2>A presentation-ready starting point.</h2><p>Swap the schematic routes for a verified map provider and measured vehicle data when the next iteration has an API or field-study source.</p></section>
+          <section className="surface about-card" style={{ background: 'hsl(var(--secondary))' }}><School size={23} style={{ marginBottom: 18 }} /><h2>A presentation-ready starting point.</h2><p>The app now connects live map routes and traffic flow while keeping the environmental factors transparent enough to explain in a college presentation.</p></section>
         </aside>
       </div>
     </div>
@@ -687,7 +687,7 @@ function EcoRouteProvider({ children }: { children: ReactNode }) {
           setTrafficSnapshot({ status: 'unavailable', message: 'The live traffic response could not be read.' });
         }
       } else {
-        setTrafficSnapshot({ status: 'unavailable', message: 'Connect a free traffic provider key to replace the demo selector with current conditions.' });
+        setTrafficSnapshot({ status: 'unavailable', message: 'Live traffic data is unavailable for this corridor.' });
       }
     };
     void loadLiveData();
