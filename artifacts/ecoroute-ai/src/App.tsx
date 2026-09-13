@@ -199,6 +199,8 @@ type EcoContextValue = {
   calculateRoute: () => void;
   results: RouteResult[];
   recommended: RouteResult;
+  selectedRouteKind: RouteKind | null;
+  setSelectedRouteKind: (value: RouteKind) => void;
 };
 
 const EcoContext = createContext<EcoContextValue | null>(null);
@@ -385,24 +387,23 @@ function HomePage() {
   );
 }
 
-function RouteMap({ results, fromPlace, toPlace, recommended, routeStatus, trafficSnapshot }: { results: RouteResult[]; fromPlace: Place; toPlace: Place; recommended: RouteKind; routeStatus: RouteDataStatus; trafficSnapshot: TrafficSnapshot }) {
+function RouteMap({ results, fromPlace, toPlace, recommended, selectedRouteKind, routeStatus, trafficSnapshot }: { results: RouteResult[]; fromPlace: Place; toPlace: Place; recommended: RouteKind; selectedRouteKind: RouteKind; routeStatus: RouteDataStatus; trafficSnapshot: TrafficSnapshot }) {
   const center: [number, number] = [(fromPlace.coordinates[0] + toPlace.coordinates[0]) / 2, (fromPlace.coordinates[1] + toPlace.coordinates[1]) / 2];
+  const selectedRoute = results.find((route) => route.kind === selectedRouteKind) ?? results[0];
   return (
     <div className="surface map-card shadow-card" data-testid="map-route-visualization">
       <div className="map-card-header">
-        <div><div className="eyebrow">Interactive live map</div><h2><Map size={19} /> Kochi corridor</h2><p>Pan and zoom the OpenStreetMap view. Route lines use public OSRM road geometry when available.</p></div>
+        <div><div className="eyebrow">Interactive live map</div><h2><Map size={19} /> Kochi corridor</h2><p>Showing the {selectedRoute.label.toLowerCase()}. Click a route choice below to switch the map.</p></div>
         <span className={`data-status ${routeStatus === 'live' ? 'is-live' : ''}`}>{routeStatus === 'live' ? 'ROUTES UPDATED' : routeStatus === 'loading' ? 'UPDATING ROUTES' : 'ROUTE FALLBACK'}</span>
       </div>
       <div className="route-map interactive-map">
-        <MapContainer center={center} zoom={11} scrollWheelZoom className="leaflet-map" aria-label="Interactive Kochi route map">
+        <MapContainer center={center} zoom={11} scrollWheelZoom className="leaflet-map" aria-label={`${selectedRoute.label} on the interactive Kochi route map`}>
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {results.map((route) => (
-            <Polyline
-              key={route.kind}
-              positions={route.geometry.length > 1 ? route.geometry : fallbackGeometry(fromPlace, toPlace)}
-              pathOptions={{ color: route.color, weight: route.kind === recommended ? 7 : 4, opacity: route.kind === recommended ? 0.95 : 0.46, dashArray: route.kind === recommended ? undefined : '8 8' }}
-            />
-          ))}
+          <Polyline
+            key={selectedRoute.kind}
+            positions={selectedRoute.geometry.length > 1 ? selectedRoute.geometry : fallbackGeometry(fromPlace, toPlace)}
+            pathOptions={{ color: selectedRoute.color, weight: 7, opacity: 0.95 }}
+          />
           {places.map((place) => {
             const selected = place.id === fromPlace.id || place.id === toPlace.id;
             return (
@@ -414,7 +415,7 @@ function RouteMap({ results, fromPlace, toPlace, recommended, routeStatus, traff
         </MapContainer>
       </div>
       <div className="map-legend">
-        {routeDefinitions.map((route) => <span key={route.kind} className={route.kind === recommended ? 'active' : ''}><i style={{ background: route.color }} />{route.label.replace(' route', '')}</span>)}
+        {routeDefinitions.map((route) => <span key={route.kind} className={route.kind === selectedRouteKind ? 'active' : ''}><i style={{ background: route.color }} />{route.label.replace(' route', '')}{route.kind === recommended ? ' · recommended' : ''}</span>)}
       </div>
       <div className={`traffic-map-readout ${trafficSnapshot.status === 'live' ? 'is-live' : ''}`}><Gauge size={14} /><span>{trafficSnapshot.status === 'live' ? `Current corridor traffic: ${trafficSnapshot.label} · ${trafficSnapshot.currentSpeedKph} km/h vs ${trafficSnapshot.freeFlowSpeedKph} free-flow` : trafficSnapshot.status === 'loading' ? 'Checking current corridor traffic…' : 'Current traffic is unavailable until a live provider key is connected.'}</span></div>
     </div>
@@ -425,10 +426,10 @@ function VehicleIcon({ category }: { category: VehicleCategory }) {
   return category === 'Bike' ? <Bike size={17} /> : <CarFront size={18} />;
 }
 
-function RouteOptionCard({ result, recommended }: { result: RouteResult; recommended: boolean }) {
+function RouteOptionCard({ result, recommended, selected, onSelect }: { result: RouteResult; recommended: boolean; selected: boolean; onSelect: () => void }) {
   const { selectedVehicle } = useEcoRoute();
   return (
-    <div className={`route-option surface${recommended ? ' selected' : ''}`} data-testid={`card-route-${result.kind}`}>
+    <div className={`route-option surface${selected ? ' selected' : ''}`} onClick={onSelect} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(); } }} role="button" tabIndex={0} aria-pressed={selected} data-testid={`card-route-${result.kind}`}>
       <div className="route-option-title"><span className="route-option-icon" style={{ background: result.color }}><RouteIcon size={15} /></span><div><strong>{result.label}</strong><small>{result.helper}</small></div>{recommended && <span className="rec-pill"><Check size={11} /> Best fit</span>}</div>
       <div className="route-option-stats"><span><Clock3 size={13} />{result.time} min</span><span><MapPin size={13} />{result.distance} km</span><span><Cloud size={13} />{result.co2.toFixed(2)} kg CO₂</span><span><Wind size={13} />{result.no2.toFixed(2)} g NO₂</span></div>
       <div className="route-option-foot"><span>{selectedVehicle.name}</span><b>{result.score}/100 fit</b></div>
@@ -453,10 +454,11 @@ function TransitPanel({ distance, vehicleSpeedKph, trafficSnapshot }: { distance
 }
 
 function PlanPage() {
-  const { from, to, setFrom, setTo, trafficSnapshot, routeStatus, priority, setPriority, calculateRoute, recommended, results, hasCalculated, vehicleCategory, setVehicleCategory, vehicleId, setVehicleId, modelYear, setModelYear, selectedVehicle, fromPlace, toPlace } = useEcoRoute();
+  const { from, to, setFrom, setTo, trafficSnapshot, routeStatus, priority, setPriority, calculateRoute, recommended, results, hasCalculated, vehicleCategory, setVehicleCategory, vehicleId, setVehicleId, modelYear, setModelYear, selectedVehicle, fromPlace, toPlace, selectedRouteKind, setSelectedRouteKind } = useEcoRoute();
   const [, setLocation] = useLocation();
   const priorityLabel = priority < 34 ? 'Fastest first' : priority < 67 ? 'Balanced choice' : 'Greenest first';
   const availableVehicles = vehicles.filter((vehicle) => vehicle.category === vehicleCategory);
+  const selectedRoute = results.find((result) => result.kind === selectedRouteKind) ?? recommended;
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     calculateRoute();
@@ -509,9 +511,9 @@ function PlanPage() {
         </form>
 
         <div className="planner-results reveal reveal-delay-1">
-          <RouteMap results={results} fromPlace={fromPlace} toPlace={toPlace} recommended={recommended.kind} routeStatus={routeStatus} trafficSnapshot={trafficSnapshot} />
-          <div className="route-summary"><div><div className="small-label">Current recommendation</div><h2 data-testid="text-recommended-route">{recommended.label}</h2><p>{fromPlace.label} → {toPlace.label} · {selectedVehicle.name} · {modelYear}</p></div><span className="data-status is-live">LIVE MAP / ESTIMATES</span></div>
-          <div className="route-option-list">{results.map((result) => <RouteOptionCard result={result} recommended={result.kind === recommended.kind} key={result.kind} />)}</div>
+          <RouteMap results={results} fromPlace={fromPlace} toPlace={toPlace} recommended={recommended.kind} selectedRouteKind={selectedRoute.kind} routeStatus={routeStatus} trafficSnapshot={trafficSnapshot} />
+          <div className="route-summary"><div><div className="small-label">Current recommendation</div><h2 data-testid="text-recommended-route">{recommended.label}</h2><p>{fromPlace.label} → {toPlace.label} · {selectedVehicle.name} · {modelYear}</p><p className="map-selection-note">Map showing: <strong>{selectedRoute.label}</strong></p></div><span className="data-status is-live">LIVE MAP / ESTIMATES</span></div>
+          <div className="route-option-list">{results.map((result) => <RouteOptionCard result={result} recommended={result.kind === recommended.kind} selected={result.kind === selectedRoute.kind} onSelect={() => setSelectedRouteKind(result.kind)} key={result.kind} />)}</div>
           <TransitPanel distance={recommended.distance} vehicleSpeedKph={selectedVehicle.speedKph} trafficSnapshot={trafficSnapshot} />
           <button className="btn btn-secondary btn-small" style={{ marginTop: 18 }} onClick={() => setLocation('/compare')} data-testid="button-view-comparison">View full route comparison <ChevronRight size={14} /></button>
         </div>
@@ -521,19 +523,20 @@ function PlanPage() {
 }
 
 function ComparePage() {
-  const { results, recommended, priority, trafficSnapshot, fromPlace, toPlace, selectedVehicle, modelYear, routeStatus } = useEcoRoute();
+  const { results, recommended, priority, trafficSnapshot, fromPlace, toPlace, selectedVehicle, modelYear, routeStatus, selectedRouteKind, setSelectedRouteKind } = useEcoRoute();
   const fastest = results.find((result) => result.kind === 'fastest') ?? results[0];
+  const selectedRoute = results.find((result) => result.kind === selectedRouteKind) ?? recommended;
   return (
     <div className="page-wrap">
       <div className="page-toolbar">
         <div><div className="eyebrow">Decision board / route comparison</div><h1 className="page-title" style={{ marginBottom: 10 }}>Same destination.<br />Three ways to get there.</h1><p className="page-subtitle">The recommendation is tuned to {trafficSnapshot.status === 'live' ? `current ${trafficSnapshot.label?.toLowerCase()} traffic` : 'the available live map data'}, your {selectedVehicle.name} ({modelYear}), and {priority}% green priority.</p></div>
         <div className="toolbar-actions"><Link href="/plan" className="btn btn-ghost btn-small" data-testid="link-edit-route">Edit trip</Link><Link href="/impact" className="btn btn-primary btn-small" data-testid="link-view-impact">See emissions <ArrowRight size={14} /></Link></div>
       </div>
-      <RouteMap results={results} fromPlace={fromPlace} toPlace={toPlace} recommended={recommended.kind} routeStatus={routeStatus} trafficSnapshot={trafficSnapshot} />
+      <RouteMap results={results} fromPlace={fromPlace} toPlace={toPlace} recommended={recommended.kind} selectedRouteKind={selectedRoute.kind} routeStatus={routeStatus} trafficSnapshot={trafficSnapshot} />
       <div className="compare-list route-compare-list" data-testid="list-route-comparison">
         <div className="compare-row compare-header"><div>Route choice</div><div>Time</div><div>Distance</div><div>CO₂</div><div>NO₂</div><div>Fit</div></div>
         {results.map((route) => (
-          <div className={`compare-row${route.kind === recommended.kind ? ' recommended' : ''}`} key={route.kind} data-testid={`row-route-${route.kind}`}>
+          <div className={`compare-row${route.kind === recommended.kind ? ' recommended' : ''}${route.kind === selectedRoute.kind ? ' selected' : ''}`} onClick={() => setSelectedRouteKind(route.kind)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedRouteKind(route.kind); } }} role="button" tabIndex={0} aria-pressed={route.kind === selectedRoute.kind} key={route.kind} data-testid={`row-route-${route.kind}`}>
             <div className="mode-cell"><span className="mode-icon route-icon-color" style={{ color: route.color }}><RouteIcon size={18} /></span><div><span className="mode-name">{route.label}</span><span className="mode-sub">{route.helper}</span></div></div>
             <div className="table-value"><strong>{route.time}</strong> min</div>
             <div className="table-value">{route.distance} km</div>
@@ -641,6 +644,7 @@ function EcoRouteProvider({ children }: { children: ReactNode }) {
   const [routeStatus, setRouteStatus] = useState<RouteDataStatus>('loading');
   const [liveRoutes, setLiveRoutes] = useState<LiveRoute[]>([]);
   const [trafficSnapshot, setTrafficSnapshot] = useState<TrafficSnapshot>({ status: 'loading' });
+  const [selectedRouteKind, setSelectedRouteKind] = useState<RouteKind | null>(null);
   const fromPlace = getPlace(from);
   const toPlace = getPlace(to);
   const selectedVehicle = getVehicle(vehicleId);
@@ -725,7 +729,7 @@ function EcoRouteProvider({ children }: { children: ReactNode }) {
   const recommended = useMemo(() => results.reduce((best, current) => current.score > best.score ? current : best, results[0]), [results]);
   const value: EcoContextValue = {
     from, to, setFrom, setTo, trafficSnapshot, routeStatus, priority, setPriority, vehicleCategory, setVehicleCategory, vehicleId, setVehicleId, modelYear, setModelYear,
-    selectedVehicle, fromPlace, toPlace, hasCalculated, calculateRoute: () => setHasCalculated(true), results, recommended,
+    selectedVehicle, fromPlace, toPlace, hasCalculated, calculateRoute: () => setHasCalculated(true), results, recommended, selectedRouteKind, setSelectedRouteKind,
   };
   return <EcoContext.Provider value={value}>{children}</EcoContext.Provider>;
 }
