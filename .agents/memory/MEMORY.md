@@ -1,0 +1,1 @@
+- [OSRM route alternatives](route-alternatives.md) — public OSRM may return only one alternative, so distinct via-road queries are used for three real map routes.

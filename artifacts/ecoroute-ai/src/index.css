@@ -295,9 +295,10 @@ button { cursor: pointer; }
 .transit-list { display: grid; gap: 7px; }
 .transit-row { display: grid; grid-template-columns: 32px minmax(150px, 1fr) repeat(4, max-content); align-items: center; gap: 11px; padding: 11px 0; border-top: 1px solid hsl(var(--border)); }
 .transit-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: hsl(var(--muted)); }
-.transit-name strong, .transit-name small { display: block; }
+.transit-name strong, .transit-name small, .transit-name em { display: block; }
 .transit-name strong { font-size: 12px; }
 .transit-name small { color: hsl(var(--muted-foreground)); font-size: 10px; margin-top: 2px; }
+.transit-name em { color: hsl(var(--primary)); font-size: 9px; font-style: normal; margin-top: 3px; }
 .transit-metric, .transit-cost { color: hsl(var(--muted-foreground)); font: 500 10px var(--app-font-mono); white-space: nowrap; }
 .transit-cost { color: hsl(var(--foreground)); }
 .transit-note { display: flex; gap: 7px; align-items: flex-start; color: hsl(var(--muted-foreground)); font-size: 10px; line-height: 1.45; margin: 16px 0 0; }

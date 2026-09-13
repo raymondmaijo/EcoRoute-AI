@@ -168,14 +168,32 @@ type TransitMode = {
   costPerKm: number;
   color: string;
   icon: LucideIcon;
+  railOnly?: boolean;
 };
 
 const transitModes: TransitMode[] = [
   { id: 'bus', label: 'City bus', helper: 'Shared road transport', co2PerPassengerKm: 0.089, no2PerPassengerKm: 0.00042, timeFactor: 1.34, costPerKm: 1.5, color: '#23957f', icon: BusFront },
-  { id: 'metro', label: 'Metro / rail', helper: 'Lower-carbon electric transit', co2PerPassengerKm: 0.035, no2PerPassengerKm: 0.00008, timeFactor: 1.18, costPerKm: 1.2, color: '#d7a945', icon: TrainFront },
+  { id: 'metro', label: 'Metro / rail', helper: 'Lower-carbon electric transit', co2PerPassengerKm: 0.035, no2PerPassengerKm: 0.00008, timeFactor: 1.18, costPerKm: 1.2, color: '#d7a945', icon: TrainFront, railOnly: true },
   { id: 'auto', label: 'Auto-rickshaw', helper: 'Short-distance shared ride', co2PerPassengerKm: 0.12, no2PerPassengerKm: 0.00062, timeFactor: 1.18, costPerKm: 3.8, color: '#df705f', icon: CarFront },
   { id: 'walk', label: 'Walk / cycle', helper: 'Zero tailpipe emissions', co2PerPassengerKm: 0, no2PerPassengerKm: 0, timeFactor: 3.4, costPerKm: 0, color: '#6d8d55', icon: PersonStanding },
 ];
+
+const transitAccess: Record<PlaceId, { busMeters: number; railMeters?: number; railName?: string }> = {
+  aluva: { busMeters: 420, railMeters: 0, railName: 'Aluva rail / metro interchange' },
+  kalamassery: { busMeters: 360, railMeters: 520, railName: 'Kalamassery metro station' },
+  thripunitara: { busMeters: 390, railMeters: 480, railName: 'Thrippunithura metro station' },
+  kakkanad: { busMeters: 560 },
+  rajagiri: { busMeters: 620 },
+};
+
+type TransitResult = TransitMode & {
+  distance: number;
+  time: number;
+  co2: number;
+  no2: number;
+  cost: number;
+  accessLabel: string;
+};
 
 type EcoContextValue = {
   from: PlaceId;
@@ -219,6 +237,10 @@ function getVehicle(id: string) {
   return vehicles.find((vehicle) => vehicle.id === id) ?? vehicles[0];
 }
 
+function vehicleCategoryLabel(category: VehicleCategory) {
+  return category === 'Car' ? '4 Wheeler' : '2 Wheeler';
+}
+
 function routePath(kind: RouteKind, start: Place, end: Place) {
   const midX = (start.x + end.x) / 2;
   const midY = (start.y + end.y) / 2;
@@ -229,10 +251,6 @@ function routePath(kind: RouteKind, start: Place, end: Place) {
 
 function baseRouteDistance(start: Place, end: Place) {
   return Math.max(3.2, Number((Math.hypot(end.x - start.x, end.y - start.y) * 0.17 + 2.6).toFixed(1)));
-}
-
-function fallbackGeometry(start: Place, end: Place): [number, number][] {
-  return [start.coordinates, end.coordinates];
 }
 
 function trafficLabel(congestion: number) {
@@ -251,16 +269,41 @@ function trafficFactors(snapshot: TrafficSnapshot) {
   };
 }
 
-function transitResults(distance: number, vehicleSpeedKph: number, snapshot: TrafficSnapshot) {
+function transitResults(distance: number, vehicle: Vehicle, snapshot: TrafficSnapshot, fromPlace: Place, toPlace: Place): TransitResult[] {
   const traffic = trafficFactors(snapshot);
-  return transitModes.map((mode) => ({
-    ...mode,
-    distance,
-    time: Math.max(1, Math.round((distance / (vehicleSpeedKph || 30)) * 60 * mode.timeFactor * (mode.id === 'metro' || mode.id === 'walk' ? 1 : traffic.time))),
-    co2: distance * mode.co2PerPassengerKm * (mode.id === 'metro' || mode.id === 'walk' ? 1 : traffic.emissions),
-    no2: distance * mode.no2PerPassengerKm * (mode.id === 'metro' || mode.id === 'walk' ? 1 : traffic.no2),
-    cost: Math.round(distance * mode.costPerKm),
-  }));
+  const startAccess = transitAccess[fromPlace.id];
+  const endAccess = transitAccess[toPlace.id];
+  return transitModes
+    .filter((mode) => (!mode.railOnly || (startAccess.railMeters !== undefined && endAccess.railMeters !== undefined)) && (mode.id !== 'walk' || distance <= 0.75))
+    .map((mode) => {
+      const isRoadTransit = mode.id === 'bus' || mode.id === 'auto';
+      const startMeters = mode.id === 'bus' ? startAccess.busMeters : mode.id === 'metro' ? startAccess.railMeters ?? 0 : 0;
+      const endMeters = mode.id === 'bus' ? endAccess.busMeters : mode.id === 'metro' ? endAccess.railMeters ?? 0 : 0;
+      const vehicleAccessMeters = (startMeters > 750 ? startMeters : 0) + (endMeters > 750 ? endMeters : 0);
+      const walkAccessMeters = (startMeters <= 750 ? startMeters : 0) + (endMeters <= 750 ? endMeters : 0);
+      const accessVehicleKm = vehicleAccessMeters / 1000;
+      const accessWalkKm = walkAccessMeters / 1000;
+      const accessTime = (accessVehicleKm / (vehicle.speedKph || 30)) * 60 + (accessWalkKm / 4.8) * 60;
+      const transitTime = (distance / (vehicle.speedKph || 30)) * 60 * mode.timeFactor * (isRoadTransit ? traffic.time : 1);
+      const startAccessLabel = startMeters > 750 ? `${Math.round(startMeters)} m via vehicle` : `${Math.round(startMeters)} m walk`;
+      const endAccessLabel = endMeters > 750 ? `${Math.round(endMeters)} m via vehicle` : `${Math.round(endMeters)} m walk`;
+      const accessLabel = mode.id === 'bus'
+        ? `Start ${startAccessLabel} · end ${endAccessLabel}`
+        : mode.id === 'metro'
+          ? `${startAccess.railName ?? 'Rail access'} → ${endAccess.railName ?? 'rail access'} · ${startAccessLabel} / ${endAccessLabel}`
+          : mode.id === 'walk'
+            ? 'Direct walking / cycling leg'
+            : 'Direct road-based trip';
+      return {
+        ...mode,
+        distance,
+        time: Math.max(1, Math.round(transitTime + accessTime)),
+        co2: distance * mode.co2PerPassengerKm * (isRoadTransit ? traffic.emissions : 1) + accessVehicleKm * vehicle.co2Factor * traffic.emissions,
+        no2: distance * mode.no2PerPassengerKm * (isRoadTransit ? traffic.no2 : 1) + accessVehicleKm * vehicle.no2Factor * traffic.no2,
+        cost: Math.round(distance * mode.costPerKm + accessVehicleKm * vehicle.fuelCost),
+        accessLabel,
+      };
+    });
 }
 
 function NavItem({ href, icon: Icon, children, onNavigate }: { href: string; icon: LucideIcon; children: ReactNode; onNavigate?: () => void }) {
@@ -328,7 +371,7 @@ function HomePage() {
         <div className="reveal">
           <div className="eyebrow">Kochi corridor / motor vehicle planner</div>
           <h1 className="hero-title">Move with<br /><em>less impact.</em></h1>
-          <p className="hero-copy">EcoRoute AI compares the fastest, cleanest, and average driving routes, then estimates how your chosen car or bike affects CO₂ and NO₂ emissions.</p>
+          <p className="hero-copy">EcoRoute AI compares the fastest, cleanest, and average driving routes, then estimates how your chosen 4 wheeler or 2 wheeler affects CO₂ and NO₂ emissions.</p>
           <div className="hero-actions">
             <Link href="/plan" className="btn btn-primary" data-testid="link-hero-plan">Plan a route <ArrowRight size={16} /></Link>
             <Link href="/compare" className="btn btn-ghost" data-testid="link-hero-compare">See route choices</Link>
@@ -399,11 +442,13 @@ function RouteMap({ results, fromPlace, toPlace, recommended, selectedRouteKind,
       <div className="route-map interactive-map">
         <MapContainer center={center} zoom={11} scrollWheelZoom className="leaflet-map" aria-label={`${selectedRoute.label} on the interactive Kochi route map`}>
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Polyline
-            key={selectedRoute.kind}
-            positions={selectedRoute.geometry.length > 1 ? selectedRoute.geometry : fallbackGeometry(fromPlace, toPlace)}
-            pathOptions={{ color: selectedRoute.color, weight: 7, opacity: 0.95 }}
-          />
+          {selectedRoute.geometry.length > 1 && (
+            <Polyline
+              key={selectedRoute.kind}
+              positions={selectedRoute.geometry}
+              pathOptions={{ color: selectedRoute.color, weight: 7, opacity: 0.95 }}
+            />
+          )}
           {places.map((place) => {
             const selected = place.id === fromPlace.id || place.id === toPlace.id;
             return (
@@ -437,18 +482,18 @@ function RouteOptionCard({ result, recommended, selected, onSelect }: { result: 
   );
 }
 
-function TransitPanel({ distance, vehicleSpeedKph, trafficSnapshot }: { distance: number; vehicleSpeedKph: number; trafficSnapshot: TrafficSnapshot }) {
-  const modes = transitResults(distance, vehicleSpeedKph, trafficSnapshot);
+function TransitPanel({ distance, vehicle, trafficSnapshot, fromPlace, toPlace }: { distance: number; vehicle: Vehicle; trafficSnapshot: TrafficSnapshot; fromPlace: Place; toPlace: Place }) {
+  const modes = transitResults(distance, vehicle, trafficSnapshot, fromPlace, toPlace);
   return (
     <section className="transit-panel surface" data-testid="panel-public-transport">
-      <div className="transit-panel-heading"><div><div className="small-label">Other ways to travel</div><h2>Compare shared and low-impact routes</h2><p>Illustrative one-passenger estimates across the same corridor distance.</p></div><span className="data-status">PER PASSENGER</span></div>
+      <div className="transit-panel-heading"><div><div className="small-label">Other ways to travel</div><h2>Compare bus, rail, and vehicle access</h2><p>Transit is shown only when the first and last mile can be walked in 750 m or less; longer access legs use the selected vehicle.</p></div><span className="data-status">PER PASSENGER</span></div>
       <div className="transit-list">
         {modes.map((mode) => {
           const Icon = mode.icon;
-          return <div className="transit-row" key={mode.id}><span className="transit-icon" style={{ color: mode.color }}><Icon size={17} /></span><div className="transit-name"><strong>{mode.label}</strong><small>{mode.helper}</small></div><span className="transit-metric">{mode.time} min</span><span className="transit-metric">{mode.co2.toFixed(2)} kg CO₂</span><span className="transit-metric">{mode.no2.toFixed(3)} g NO₂</span><span className="transit-cost">₹{mode.cost}</span></div>;
+          return <div className="transit-row" key={mode.id}><span className="transit-icon" style={{ color: mode.color }}><Icon size={17} /></span><div className="transit-name"><strong>{mode.label}</strong><small>{mode.helper}</small><em>{mode.accessLabel}</em></div><span className="transit-metric">{mode.time} min</span><span className="transit-metric">{mode.co2.toFixed(2)} kg CO₂</span><span className="transit-metric">{mode.no2.toFixed(3)} g NO₂</span><span className="transit-cost">₹{mode.cost}</span></div>;
         })}
       </div>
-      <p className="transit-note"><Info size={14} />Bus and auto values assume one passenger and average occupancy factors; metro/rail values are corridor estimates, not a live transit timetable. Walking and cycling have zero tailpipe emissions.</p>
+      <p className="transit-note"><Info size={14} />Bus and rail availability use the selected Kochi place and nearby access-point estimates. Distances over 750 m are explicitly assigned to the selected 4 Wheeler / 2 Wheeler instead of being treated as walking.</p>
     </section>
   );
 }
@@ -483,7 +528,7 @@ function PlanPage() {
           <div className="field">
             <label>Vehicle type</label>
             <div className="category-toggle">
-              {(['Car', 'Bike'] as VehicleCategory[]).map((category) => <button type="button" className={`category-btn${vehicleCategory === category ? ' active' : ''}`} onClick={() => setVehicleCategory(category)} key={category} data-testid={`button-vehicle-category-${category.toLowerCase()}`}><VehicleIcon category={category} />{category}</button>)}
+              {(['Car', 'Bike'] as VehicleCategory[]).map((category) => <button type="button" className={`category-btn${vehicleCategory === category ? ' active' : ''}`} onClick={() => setVehicleCategory(category)} key={category} data-testid={`button-vehicle-category-${vehicleCategoryLabel(category).toLowerCase().replace(' ', '-')}`}><VehicleIcon category={category} />{vehicleCategoryLabel(category)}</button>)}
             </div>
           </div>
           <div className="field">
@@ -514,7 +559,7 @@ function PlanPage() {
           <RouteMap results={results} fromPlace={fromPlace} toPlace={toPlace} recommended={recommended.kind} selectedRouteKind={selectedRoute.kind} routeStatus={routeStatus} trafficSnapshot={trafficSnapshot} />
           <div className="route-summary"><div><div className="small-label">Current recommendation</div><h2 data-testid="text-recommended-route">{recommended.label}</h2><p>{fromPlace.label} → {toPlace.label} · {selectedVehicle.name} · {modelYear}</p><p className="map-selection-note">Map showing: <strong>{selectedRoute.label}</strong></p></div><span className="data-status is-live">LIVE MAP / ESTIMATES</span></div>
           <div className="route-option-list">{results.map((result) => <RouteOptionCard result={result} recommended={result.kind === recommended.kind} selected={result.kind === selectedRoute.kind} onSelect={() => setSelectedRouteKind(result.kind)} key={result.kind} />)}</div>
-          <TransitPanel distance={recommended.distance} vehicleSpeedKph={selectedVehicle.speedKph} trafficSnapshot={trafficSnapshot} />
+          <TransitPanel distance={selectedRoute.distance} vehicle={selectedVehicle} trafficSnapshot={trafficSnapshot} fromPlace={fromPlace} toPlace={toPlace} />
           <button className="btn btn-secondary btn-small" style={{ marginTop: 18 }} onClick={() => setLocation('/compare')} data-testid="button-view-comparison">View full route comparison <ChevronRight size={14} /></button>
         </div>
       </div>
@@ -598,8 +643,8 @@ function AboutPage() {
       <p className="page-subtitle">EcoRoute AI is a student-built Engineering / IT project exploring how route choice, vehicle choice, and exhaust pollution can be explained in one approachable interface.</p>
       <div className="about-grid">
         <div className="about-main">
-          <section className="surface about-card shadow-card"><h2>What we are testing</h2><p>Can a route planner move beyond “fastest” and help people understand the cost of convenience? EcoRoute compares three schematic route choices around the Kochi corridor and adapts the emissions estimate to a selected car or bike model.</p><div className="limitation"><p><strong>Design principle:</strong> clarity before persuasion. The app should make a cleaner option understandable without pretending every decision is simple.</p></div></section>
-          <section className="surface about-card"><h2>How the demo works</h2><ul><li>Choose from Aluva Railway Station, Kalamassery, Thripunitara, Kakkanad, and Rajagiri School of Engineering.</li><li>Choose a car or bike model and model year from the included Indian vehicle catalog.</li><li>Compare fastest, cleanest / greenest, and average route choices on the interactive OpenStreetMap view.</li><li>CO₂ follows <strong>road distance × vehicle factor × model-year adjustment × live traffic factor</strong> when current flow data is available; NO₂ uses a separate indicative factor.</li><li>Public transport estimates show bus, metro / rail, auto-rickshaw, and walking / cycling alternatives for one passenger.</li></ul></section>
+          <section className="surface about-card shadow-card"><h2>What we are testing</h2><p>Can a route planner move beyond “fastest” and help people understand the cost of convenience? EcoRoute compares three real road-route choices around the Kochi corridor and adapts the emissions estimate to a selected 4 wheeler or 2 wheeler model.</p><div className="limitation"><p><strong>Design principle:</strong> clarity before persuasion. The app should make a cleaner option understandable without pretending every decision is simple.</p></div></section>
+          <section className="surface about-card"><h2>How the demo works</h2><ul><li>Choose from Aluva Railway Station, Kalamassery, Thripunitara, Kakkanad, and Rajagiri School of Engineering.</li><li>Choose a 4 wheeler or 2 wheeler model and model year from the included Indian vehicle catalog.</li><li>Compare fastest, cleanest / greenest, and average road routes with full turn geometry on the interactive OpenStreetMap view.</li><li>CO₂ follows <strong>road distance × vehicle factor × model-year adjustment × live traffic factor</strong> when current flow data is available; NO₂ uses a separate indicative factor.</li><li>Public transport estimates show bus, metro / rail when both ends have nearby access, auto-rickshaw, and walking / cycling alternatives with the 750 m access rule.</li></ul></section>
           <section className="surface about-card"><h2>Limitations & responsible use</h2><p>Road geometry comes from public OpenStreetMap/OSRM services and current traffic comes from a TomTom flow segment when available. Emission factors remain illustrative averages and do not account for occupancy, vehicle condition, road grade, maintenance, fuel blend, cold starts, or life-cycle emissions. Use the readouts to understand the shape of a decision, not as certified environmental data or guaranteed turn-by-turn guidance.</p></section>
           <section className="surface about-card"><h2>Future scope</h2><p>Next steps could include OpenStreetMap or Google Maps route geometry, live traffic, elevation-aware fuel burn, vehicle registration lookups, route GPS traces, weather conditions, and a confidence interval around each estimate.</p></section>
         </div>
@@ -642,7 +687,7 @@ function EcoRouteProvider({ children }: { children: ReactNode }) {
   const [modelYear, setModelYear] = useState(2022);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [routeStatus, setRouteStatus] = useState<RouteDataStatus>('loading');
-  const [liveRoutes, setLiveRoutes] = useState<LiveRoute[]>([]);
+  const [liveRoutes, setLiveRoutes] = useState<Array<LiveRoute | null>>([]);
   const [trafficSnapshot, setTrafficSnapshot] = useState<TrafficSnapshot>({ status: 'loading' });
   const [selectedRouteKind, setSelectedRouteKind] = useState<RouteKind | null>(null);
   const fromPlace = getPlace(from);
@@ -658,31 +703,50 @@ function EcoRouteProvider({ children }: { children: ReactNode }) {
     const loadLiveData = async () => {
       setRouteStatus('loading');
       setTrafficSnapshot({ status: 'loading' });
-      const routeUrl = `https://router.project-osrm.org/route/v1/driving/${fromPlace.coordinates[1]},${fromPlace.coordinates[0]};${toPlace.coordinates[1]},${toPlace.coordinates[0]}?overview=full&geometries=geojson&alternatives=true&steps=false`;
-      const midpoint = [(fromPlace.coordinates[0] + toPlace.coordinates[0]) / 2, (fromPlace.coordinates[1] + toPlace.coordinates[1]) / 2];
+      const [fromLat, fromLon] = fromPlace.coordinates;
+      const [toLat, toLon] = toPlace.coordinates;
+      const latitudeSpan = toLat - fromLat;
+      const longitudeSpan = toLon - fromLon;
+      const span = Math.max(Math.hypot(latitudeSpan, longitudeSpan), 0.01);
+      const offset = Math.min(0.035, Math.max(0.012, span * 0.22));
+      const perpendicular: [number, number] = [-longitudeSpan / span, latitudeSpan / span];
+      const midpoint: [number, number] = [(fromLat + toLat) / 2, (fromLon + toLon) / 2];
+      const westVia: [number, number] = [midpoint[0] + perpendicular[0] * offset, midpoint[1] + perpendicular[1] * offset];
+      const eastVia: [number, number] = [midpoint[0] - perpendicular[0] * offset, midpoint[1] - perpendicular[1] * offset];
+      const routePoints: Array<Array<[number, number]>> = [
+        [[fromLon, fromLat], [toLon, toLat]],
+        [[fromLon, fromLat], [westVia[1], westVia[0]], [toLon, toLat]],
+        [[fromLon, fromLat], [eastVia[1], eastVia[0]], [toLon, toLat]],
+      ];
+      const routeUrls = routePoints.map((points) => `https://router.project-osrm.org/route/v1/driving/${points.map(([lon, lat]) => `${lon},${lat}`).join(';')}?overview=full&geometries=geojson&alternatives=true&steps=true`);
       const trafficUrl = `/api/traffic?lat=${midpoint[0].toFixed(5)}&lon=${midpoint[1].toFixed(5)}`;
-      const [routeResponse, trafficResponse] = await Promise.allSettled([fetch(routeUrl), fetch(trafficUrl)]);
+      const responses = await Promise.allSettled([...routeUrls.map((url) => fetch(url)), fetch(trafficUrl)]);
       if (cancelled) return;
 
-      if (routeResponse.status === 'fulfilled' && routeResponse.value.ok) {
+      const routeResponses = responses.slice(0, routeUrls.length);
+      const routes = await Promise.all(routeResponses.map(async (response) => {
+        if (response.status !== 'fulfilled' || !response.value.ok) return null;
         try {
-          const routeJson = await routeResponse.value.json() as { routes?: Array<{ distance: number; duration: number; geometry?: { coordinates?: Array<[number, number]> } }> };
-          const routes = (routeJson.routes ?? []).map((route) => ({
+          const routeJson = await response.value.json() as { routes?: Array<{ distance: number; duration: number; geometry?: { coordinates?: Array<[number, number]> } }> };
+          const route = routeJson.routes?.[0];
+          if (!route) return null;
+          const geometry = (route.geometry?.coordinates ?? []).map(([lon, lat]) => [lat, lon] as [number, number]);
+          return geometry.length > 1 ? {
             distanceKm: Number((route.distance / 1000).toFixed(1)),
             durationMin: Math.max(1, Math.round(route.duration / 60)),
-            geometry: (route.geometry?.coordinates ?? []).map(([lon, lat]) => [lat, lon] as [number, number]),
-          }));
-          setLiveRoutes(routes);
-          setRouteStatus(routes.length ? 'live' : 'unavailable');
+            geometry,
+          } : null;
         } catch {
-          setLiveRoutes([]);
-          setRouteStatus('unavailable');
+          return null;
         }
-      } else {
-        setLiveRoutes([]);
-        setRouteStatus('unavailable');
+      }));
+      if (routes[1] && routes[2] && routes[1].distanceKm > routes[2].distanceKm) {
+        [routes[1], routes[2]] = [routes[2], routes[1]];
       }
+      setLiveRoutes(routes);
+      setRouteStatus(routes.some(Boolean) ? 'live' : 'unavailable');
 
+      const trafficResponse = responses[routeUrls.length];
       if (trafficResponse.status === 'fulfilled' && trafficResponse.value.ok) {
         try {
           const trafficJson = await trafficResponse.value.json() as TrafficSnapshot;
@@ -707,14 +771,14 @@ function EcoRouteProvider({ children }: { children: ReactNode }) {
     const traffic = trafficFactors(trafficSnapshot);
     const ageAdjustment = 1 + Math.max(0, 2026 - modelYear - 3) * 0.02;
     const raw = routeDefinitions.map((definition) => {
-      const liveRoute = liveRoutes[routeDefinitions.findIndex((item) => item.kind === definition.kind)];
+      const liveRoute = liveRoutes[routeDefinitions.findIndex((item) => item.kind === definition.kind)] ?? undefined;
       const distance = liveRoute?.distanceKm ?? Number((baseDistance * definition.distanceFactor).toFixed(1));
       const baselineTime = liveRoute?.durationMin ?? Math.max(1, Math.round((distance / selectedVehicle.speedKph) * 60 * definition.timeFactor));
       const time = Math.max(1, Math.round(baselineTime * traffic.time));
       const co2 = distance * selectedVehicle.co2Factor * ageAdjustment * traffic.emissions;
       const no2 = distance * selectedVehicle.no2Factor * ageAdjustment * traffic.no2;
       const cost = Math.round(distance * selectedVehicle.fuelCost);
-      return { ...definition, distance, time, cost, co2, no2, path: routePath(definition.kind, fromPlace, toPlace), geometry: liveRoute?.geometry ?? fallbackGeometry(fromPlace, toPlace) };
+      return { ...definition, distance, time, cost, co2, no2, path: routePath(definition.kind, fromPlace, toPlace), geometry: liveRoute?.geometry ?? [] };
     });
     const minTime = Math.min(...raw.map((route) => route.time));
     const maxTime = Math.max(...raw.map((route) => route.time));
