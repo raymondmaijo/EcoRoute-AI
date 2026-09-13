@@ -268,6 +268,7 @@ button { cursor: pointer; }
 .route-icon-color { background: hsl(var(--muted)); }
 .impact-mini-stat { display: flex; gap: 14px; flex-wrap: wrap; color: hsl(48 31% 95% / .78); font: 500 11px var(--app-font-mono); }
 .impact-mini-stat span { display: inline-flex; align-items: center; gap: 6px; }
+.impact-comparison-note { margin-top: 16px; padding-top: 14px; border-top: 1px solid hsl(48 31% 95% / .18); font-size: 11px !important; }
 .impact-substat { margin-top: 4px; color: hsl(var(--muted-foreground)); font: 500 10px var(--app-font-mono); }
 .pollutant-chart { margin-top: 14px; }
 .data-status { display: inline-flex; align-items: center; gap: 6px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font: 500 10px var(--app-font-mono); padding: 7px 9px; border-radius: 20px; white-space: nowrap; }

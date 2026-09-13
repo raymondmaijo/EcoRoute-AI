@@ -76,25 +76,25 @@ type Vehicle = {
 
 const vehicles: Vehicle[] = [
   { id: 'swift', name: 'Maruti Suzuki Swift', category: 'Car', fuel: 'Petrol', co2Factor: 0.142, no2Factor: 0.05, speedKph: 35, fuelCost: 7.4 },
-  { id: 'dzire', name: 'Maruti Suzuki Dzire', category: 'Car', fuel: 'Petrol', co2Factor: 0.136, no2Factor: 0.05, speedKph: 35, fuelCost: 7.1 },
+  { id: 'dzire', name: 'Maruti Suzuki Dzire', category: 'Car', fuel: 'Petrol', co2Factor: 0.136, no2Factor: 0.052, speedKph: 35, fuelCost: 7.1 },
   { id: 'wagonr', name: 'Maruti Suzuki WagonR', category: 'Car', fuel: 'Petrol', co2Factor: 0.131, no2Factor: 0.045, speedKph: 34, fuelCost: 6.9 },
   { id: 'innova', name: 'Toyota Innova', category: 'Car', fuel: 'Diesel', co2Factor: 0.205, no2Factor: 0.11, speedKph: 34, fuelCost: 10.8 },
   { id: 'bolero', name: 'Mahindra Bolero', category: 'Car', fuel: 'Diesel', co2Factor: 0.214, no2Factor: 0.12, speedKph: 33, fuelCost: 11.2 },
   { id: 'bmw-m1', name: 'BMW M1', category: 'Car', fuel: 'Petrol', co2Factor: 0.235, no2Factor: 0.08, speedKph: 38, fuelCost: 14.5 },
-  { id: 'bmw-m2', name: 'BMW M2', category: 'Car', fuel: 'Petrol', co2Factor: 0.245, no2Factor: 0.08, speedKph: 38, fuelCost: 15.1 },
+  { id: 'bmw-m2', name: 'BMW M2', category: 'Car', fuel: 'Petrol', co2Factor: 0.245, no2Factor: 0.085, speedKph: 38, fuelCost: 15.1 },
   { id: 'bmw-m3', name: 'BMW M3', category: 'Car', fuel: 'Petrol', co2Factor: 0.258, no2Factor: 0.09, speedKph: 39, fuelCost: 16.2 },
-  { id: 'bmw-m4', name: 'BMW M4', category: 'Car', fuel: 'Petrol', co2Factor: 0.265, no2Factor: 0.09, speedKph: 39, fuelCost: 16.7 },
+  { id: 'bmw-m4', name: 'BMW M4', category: 'Car', fuel: 'Petrol', co2Factor: 0.265, no2Factor: 0.095, speedKph: 39, fuelCost: 16.7 },
   { id: 'bmw-m5', name: 'BMW M5', category: 'Car', fuel: 'Petrol', co2Factor: 0.29, no2Factor: 0.1, speedKph: 39, fuelCost: 18.2 },
-  { id: 'brezza', name: 'Maruti Suzuki Brezza', category: 'Car', fuel: 'Petrol', co2Factor: 0.15, no2Factor: 0.05, speedKph: 35, fuelCost: 7.8 },
-  { id: 'thar', name: 'Mahindra Thar', category: 'Car', fuel: 'Diesel', co2Factor: 0.22, no2Factor: 0.12, speedKph: 33, fuelCost: 11.8 },
-  { id: 'xuv500', name: 'Mahindra XUV 500', category: 'Car', fuel: 'Diesel', co2Factor: 0.21, no2Factor: 0.11, speedKph: 34, fuelCost: 11.1 },
-  { id: 'xuv600', name: 'Mahindra XUV 600', category: 'Car', fuel: 'Diesel', co2Factor: 0.19, no2Factor: 0.1, speedKph: 35, fuelCost: 10.2 },
-  { id: 'xuv700', name: 'Mahindra XUV 700', category: 'Car', fuel: 'Diesel', co2Factor: 0.2, no2Factor: 0.1, speedKph: 35, fuelCost: 10.5 },
-  { id: 'innova-crysta', name: 'Toyota Innova Crysta', category: 'Car', fuel: 'Diesel', co2Factor: 0.21, no2Factor: 0.11, speedKph: 34, fuelCost: 11.1 },
-  { id: 'i20', name: 'Hyundai i20', category: 'Car', fuel: 'Petrol', co2Factor: 0.145, no2Factor: 0.05, speedKph: 35, fuelCost: 7.6 },
-  { id: 'creta', name: 'Hyundai Creta', category: 'Car', fuel: 'Petrol', co2Factor: 0.17, no2Factor: 0.06, speedKph: 35, fuelCost: 8.8 },
-  { id: 'nexon', name: 'Tata Nexon', category: 'Car', fuel: 'Petrol', co2Factor: 0.16, no2Factor: 0.055, speedKph: 35, fuelCost: 8.4 },
-  { id: 'punch', name: 'Tata Punch', category: 'Car', fuel: 'Petrol', co2Factor: 0.15, no2Factor: 0.05, speedKph: 34, fuelCost: 7.9 },
+  { id: 'brezza', name: 'Maruti Suzuki Brezza', category: 'Car', fuel: 'Petrol', co2Factor: 0.15, no2Factor: 0.055, speedKph: 35, fuelCost: 7.8 },
+  { id: 'thar', name: 'Mahindra Thar', category: 'Car', fuel: 'Diesel', co2Factor: 0.22, no2Factor: 0.125, speedKph: 33, fuelCost: 11.8 },
+  { id: 'xuv500', name: 'Mahindra XUV 500', category: 'Car', fuel: 'Diesel', co2Factor: 0.21, no2Factor: 0.112, speedKph: 34, fuelCost: 11.1 },
+  { id: 'xuv600', name: 'Mahindra XUV 600', category: 'Car', fuel: 'Diesel', co2Factor: 0.19, no2Factor: 0.102, speedKph: 35, fuelCost: 10.2 },
+  { id: 'xuv700', name: 'Mahindra XUV 700', category: 'Car', fuel: 'Diesel', co2Factor: 0.2, no2Factor: 0.106, speedKph: 35, fuelCost: 10.5 },
+  { id: 'innova-crysta', name: 'Toyota Innova Crysta', category: 'Car', fuel: 'Diesel', co2Factor: 0.212, no2Factor: 0.114, speedKph: 34, fuelCost: 11.1 },
+  { id: 'i20', name: 'Hyundai i20', category: 'Car', fuel: 'Petrol', co2Factor: 0.145, no2Factor: 0.057, speedKph: 35, fuelCost: 7.6 },
+  { id: 'creta', name: 'Hyundai Creta', category: 'Car', fuel: 'Petrol', co2Factor: 0.17, no2Factor: 0.062, speedKph: 35, fuelCost: 8.8 },
+  { id: 'nexon', name: 'Tata Nexon', category: 'Car', fuel: 'Petrol', co2Factor: 0.16, no2Factor: 0.059, speedKph: 35, fuelCost: 8.4 },
+  { id: 'punch', name: 'Tata Punch', category: 'Car', fuel: 'Petrol', co2Factor: 0.152, no2Factor: 0.053, speedKph: 34, fuelCost: 7.9 },
   { id: 'passion-pro', name: 'Hero Passion Pro', category: 'Bike', fuel: 'Petrol', co2Factor: 0.062, no2Factor: 0.028, speedKph: 28, fuelCost: 2.2 },
   { id: 'splendor', name: 'Hero Splendor', category: 'Bike', fuel: 'Petrol', co2Factor: 0.058, no2Factor: 0.026, speedKph: 28, fuelCost: 2 },
   { id: 'duke-125', name: 'KTM Duke 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.073, no2Factor: 0.032, speedKph: 31, fuelCost: 2.7 },
@@ -104,17 +104,17 @@ const vehicles: Vehicle[] = [
   { id: 'classic-350', name: 'Royal Enfield Classic 350', category: 'Bike', fuel: 'Petrol', co2Factor: 0.091, no2Factor: 0.04, speedKph: 29, fuelCost: 3.4 },
   { id: 'activa-6g', name: 'Honda Activa 6G', category: 'Bike', fuel: 'Petrol', co2Factor: 0.067, no2Factor: 0.029, speedKph: 27, fuelCost: 2.4 },
   { id: 'shine', name: 'Honda Shine', category: 'Bike', fuel: 'Petrol', co2Factor: 0.061, no2Factor: 0.027, speedKph: 28, fuelCost: 2.1 },
-  { id: 'unicorn', name: 'Honda Unicorn', category: 'Bike', fuel: 'Petrol', co2Factor: 0.066, no2Factor: 0.029, speedKph: 29, fuelCost: 2.4 },
-  { id: 'pulsar-150', name: 'Bajaj Pulsar 150', category: 'Bike', fuel: 'Petrol', co2Factor: 0.07, no2Factor: 0.03, speedKph: 29, fuelCost: 2.6 },
-  { id: 'apache-160', name: 'TVS Apache RTR 160', category: 'Bike', fuel: 'Petrol', co2Factor: 0.074, no2Factor: 0.032, speedKph: 30, fuelCost: 2.8 },
-  { id: 'fz-fi', name: 'Yamaha FZ-FI', category: 'Bike', fuel: 'Petrol', co2Factor: 0.069, no2Factor: 0.03, speedKph: 29, fuelCost: 2.5 },
+  { id: 'unicorn', name: 'Honda Unicorn', category: 'Bike', fuel: 'Petrol', co2Factor: 0.066, no2Factor: 0.03, speedKph: 29, fuelCost: 2.4 },
+  { id: 'pulsar-150', name: 'Bajaj Pulsar 150', category: 'Bike', fuel: 'Petrol', co2Factor: 0.07, no2Factor: 0.031, speedKph: 29, fuelCost: 2.6 },
+  { id: 'apache-160', name: 'TVS Apache RTR 160', category: 'Bike', fuel: 'Petrol', co2Factor: 0.074, no2Factor: 0.033, speedKph: 30, fuelCost: 2.8 },
+  { id: 'fz-fi', name: 'Yamaha FZ-FI', category: 'Bike', fuel: 'Petrol', co2Factor: 0.069, no2Factor: 0.0295, speedKph: 29, fuelCost: 2.5 },
   { id: 'r15', name: 'Yamaha R15', category: 'Bike', fuel: 'Petrol', co2Factor: 0.078, no2Factor: 0.034, speedKph: 31, fuelCost: 2.9 },
-  { id: 'jupiter', name: 'TVS Jupiter', category: 'Bike', fuel: 'Petrol', co2Factor: 0.068, no2Factor: 0.029, speedKph: 27, fuelCost: 2.4 },
-  { id: 'sp125', name: 'Honda SP 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.06, no2Factor: 0.027, speedKph: 28, fuelCost: 2.1 },
-  { id: 'avenger-160', name: 'Bajaj Avenger 160', category: 'Bike', fuel: 'Petrol', co2Factor: 0.078, no2Factor: 0.034, speedKph: 28, fuelCost: 2.9 },
+  { id: 'jupiter', name: 'TVS Jupiter', category: 'Bike', fuel: 'Petrol', co2Factor: 0.068, no2Factor: 0.0285, speedKph: 27, fuelCost: 2.4 },
+  { id: 'sp125', name: 'Honda SP 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.06, no2Factor: 0.0275, speedKph: 28, fuelCost: 2.1 },
+  { id: 'avenger-160', name: 'Bajaj Avenger 160', category: 'Bike', fuel: 'Petrol', co2Factor: 0.079, no2Factor: 0.0345, speedKph: 28, fuelCost: 2.9 },
   { id: 'hunter-350', name: 'Royal Enfield Hunter 350', category: 'Bike', fuel: 'Petrol', co2Factor: 0.088, no2Factor: 0.039, speedKph: 29, fuelCost: 3.3 },
-  { id: 'raider-125', name: 'TVS Raider 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.059, no2Factor: 0.026, speedKph: 29, fuelCost: 2.1 },
-  { id: 'access-125', name: 'Suzuki Access 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.067, no2Factor: 0.029, speedKph: 27, fuelCost: 2.4 },
+  { id: 'raider-125', name: 'TVS Raider 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.059, no2Factor: 0.0265, speedKph: 29, fuelCost: 2.1 },
+  { id: 'access-125', name: 'Suzuki Access 125', category: 'Bike', fuel: 'Petrol', co2Factor: 0.0675, no2Factor: 0.0305, speedKph: 27, fuelCost: 2.4 },
 ];
 
 const routeDefinitions: Array<{ kind: RouteKind; label: string; helper: string; distanceFactor: number; timeFactor: number; color: string }> = [
@@ -602,6 +602,7 @@ function ImpactPage() {
   const fastest = results.find((result) => result.kind === 'fastest') ?? results[0];
   const co2Saving = Math.max(0, fastest.co2 - recommended.co2);
   const no2Saving = Math.max(0, fastest.no2 - recommended.no2);
+  const hasRouteSavings = co2Saving >= 0.005 || no2Saving >= 0.005;
   const maxCo2 = Math.max(...results.map((route) => route.co2), 0.01);
   const maxNo2 = Math.max(...results.map((route) => route.no2), 0.01);
   return (
@@ -610,7 +611,7 @@ function ImpactPage() {
       <h1 className="page-title">Measure what your<br /><span style={{ color: 'hsl(var(--primary))' }}>vehicle leaves behind.</span></h1>
       <p className="page-subtitle">{selectedVehicle.name} ({modelYear}) on {fromPlace.label} → {toPlace.label}, with {trafficSnapshot.status === 'live' ? `current ${trafficSnapshot.label?.toLowerCase()} traffic` : 'live traffic unavailable'}. These values are estimated for the selected trip.</p>
       <div className="impact-hero">
-        <div className="surface impact-summary shadow-card"><div className="eyebrow" style={{ color: 'hsl(48 31% 95% / .72)' }}>If you choose {recommended.label}</div><h2>One trip, measured honestly.</h2><p>Compared with the fastest route for this vehicle, your current recommendation avoids an estimated amount of tailpipe CO₂ and NO₂.</p><div className="big-saving" data-testid="text-co2-saving">{co2Saving.toFixed(2)} <small>kg CO₂ saved</small></div><div className="impact-mini-stat"><span><Wind size={15} /> {no2Saving.toFixed(2)} g NO₂ avoided</span><span><VehicleIcon category={selectedVehicle.category} /> {selectedVehicle.name}</span></div></div>
+         <div className="surface impact-summary shadow-card"><div className="eyebrow" style={{ color: 'hsl(48 31% 95% / .72)' }}>If you choose {recommended.label}</div><h2>One trip, measured honestly.</h2><p>This is the estimated tailpipe output for your selected vehicle and route. The value changes with the model, model year, route distance, and traffic.</p><div className="big-saving" data-testid="text-co2-emitted">{recommended.co2.toFixed(2)} <small>kg CO₂ emitted</small></div><div className="impact-mini-stat"><span><Wind size={15} /> {recommended.no2.toFixed(2)} g NO₂ estimated</span><span><VehicleIcon category={selectedVehicle.category} /> {selectedVehicle.name}</span></div><p className="impact-comparison-note">{hasRouteSavings ? `Compared with the fastest route, this choice avoids ${co2Saving.toFixed(2)} kg CO₂ and ${no2Saving.toFixed(2)} g NO₂.` : 'This route is the current fastest baseline, so there is no route-saving credit to subtract from the actual emissions.'}</p></div>
         <div className="impact-stat-stack">
           <div className="surface impact-stat"><div><div className="stat-label">Fastest baseline</div><div className="stat-number">{fastest.co2.toFixed(2)} kg</div><div className="impact-substat">{fastest.no2.toFixed(2)} g NO₂</div></div><Clock3 size={24} /></div>
           <div className="surface impact-stat"><div><div className="stat-label">Recommended route</div><div className="stat-number">{recommended.co2.toFixed(2)} kg</div><div className="impact-substat">{recommended.no2.toFixed(2)} g NO₂</div></div><Leaf size={24} /></div>
